@@ -4,7 +4,8 @@ OBJS = smlar.o smlar_gist.o smlar_gin.o smlar_cache.o \
 		tsarr.o smlar_guc.o smlar_stat.o 
 
 EXTENSION = smlar
-DATA = smlar--1.0.sql  smlar--unpackaged--1.0.sql
+DATA = smlar--1.0.sql  smlar--unpackaged--1.0.sql \
+		smlar--1.0-1.1.sql smlar--1.1.sql
 REGRESS = smlar int2 int4 int8 float4 float8 money oid \
 		timestamp timestamptz time timetz date interval \
 		macaddr	inet cidr \

@@ -607,6 +607,169 @@ hemdist(SmlSign *a, SmlSign *b)
 	return hemdistsign(GETSIGN(a), GETSIGN(b));
 }
 
+static int
+minhemdistsign(BITVECP query, BITVECP key)
+{
+	int	i,
+		diff,
+		dist = 0;
+
+return 0;
+	LOOPBYTE
+	{
+		diff = (unsigned char) (query[i] & (~key[i]));
+		dist += number_of_ones[diff];
+	}
+	return dist;
+}
+
+static int
+minhemdist(SmlSign *query, SmlSign *key, GISTENTRY *entry)
+{
+	if (ISALLTRUE(key))
+			return 0;
+
+	if (GIST_LEAF(entry))
+		return hemdistsign(GETSIGN(query), GETSIGN(key));
+
+	return minhemdistsign(GETSIGN(query), GETSIGN(key));
+}
+
+PG_FUNCTION_INFO_V1(g_smlar_distance);
+Datum g_smlar_distance(PG_FUNCTION_ARGS);
+Datum
+g_smlar_distance(PG_FUNCTION_ARGS)
+{	
+	GISTENTRY		*entry = (GISTENTRY *) PG_GETARG_POINTER(0);
+	StrategyNumber	strategy = (StrategyNumber) PG_GETARG_UINT16(2);
+	bool			*recheck = (bool *) PG_GETARG_POINTER(4);
+	ArrayType		*a;
+	SmlSign			*key = (SmlSign*)DatumGetPointer(entry->key);
+	double				res = 0;
+	SmlSign			*query;
+	SimpleArray		*s;
+	int32			i;
+	//if (GIST_LEAF(entry))
+		//*recheck = true;
+
+	fcinfo->flinfo->fn_extra = SearchArrayCache(
+									fcinfo->flinfo->fn_extra,
+									fcinfo->flinfo->fn_mcxt,
+									PG_GETARG_DATUM(1), &a, &s, &query);
+
+
+	if (ISARRKEY(key))
+	{		
+		uint32	*kptr = GETARR(key),
+				*qptr = GETARR(query);
+		elog(NOTICE,"value");
+
+		while( kptr - GETARR(key) < key->size && qptr - GETARR(query) < query->size )
+		{
+			if ( *kptr < *qptr )
+			{
+				res++;
+				if (GIST_LEAF(entry))
+					kptr++;
+			}
+			else if ( *kptr > *qptr )
+			{
+				res++;
+				qptr++;
+			} else
+			{
+				qptr++;
+				kptr++;
+			}
+		}
+		//*recheck = false;
+	}
+	else
+	{
+		BITVECP sign = GETSIGN(key);
+		elog(NOTICE,"hash");
+
+		fillHashVal(fcinfo->flinfo->fn_extra, s);
+
+		for(i=0; i<s->nelems; i++)
+		{
+			if ( !GETBIT(sign, HASHVAL(s->hash[i])) )
+			{
+				res++;
+			}
+		}
+		*recheck = true;
+	}
+	//res = minhemdist(query, key, entry);
+	
+
+	PG_RETURN_FLOAT8(res);
+}
+
+extern int
+cmpArrayElem(const void *a, const void *b, void *arg);
+
+static int
+numOfMutualExclusion(SimpleArray *a, SimpleArray *b)
+{
+	int				cnt = 0,
+					cmp;
+	Datum			*aptr = a->elems,
+					*bptr = b->elems;
+	ProcTypeInfo	info = a->info;
+
+	Assert( a->info->typid == b->info->typid );
+
+	getFmgrInfoCmp(info);
+
+	while( aptr - a->elems < a->nelems && bptr - b->elems < b->nelems )
+	{
+		cmp = cmpArrayElem(aptr, bptr, info);
+		if ( cmp < 0 )
+		{
+			cnt++;
+			aptr++;
+		}
+		else if ( cmp > 0 )
+		{
+			cnt++;
+			bptr++;
+		}
+		else
+		{
+			aptr++;
+			bptr++;
+		}
+	}
+
+	return cnt - (aptr - a->elems) - (bptr - b->elems) + a->nelems + b->nelems;
+}
+
+PG_FUNCTION_INFO_V1(arraydist);
+Datum	arraydist(PG_FUNCTION_ARGS);
+Datum
+arraydist(PG_FUNCTION_ARGS)
+{
+	ArrayType		*a, *b;
+	SimpleArray		*sa, *sb;
+
+	fcinfo->flinfo->fn_extra = SearchArrayCache(
+							fcinfo->flinfo->fn_extra,
+							fcinfo->flinfo->fn_mcxt,
+							PG_GETARG_DATUM(0), &a, &sa, NULL);
+	fcinfo->flinfo->fn_extra = SearchArrayCache(
+							fcinfo->flinfo->fn_extra,
+							fcinfo->flinfo->fn_mcxt,
+							PG_GETARG_DATUM(1), &b, &sb, NULL);
+
+	if ( ARR_ELEMTYPE(a) != ARR_ELEMTYPE(b) )
+		elog(ERROR,"Arguments array are not the same type!");
+
+	float4 res = (float4)numOfMutualExclusion(sa, sb);
+
+	PG_RETURN_FLOAT4(res);
+}
+
 PG_FUNCTION_INFO_V1(gsmlsign_penalty);
 Datum gsmlsign_penalty(PG_FUNCTION_ARGS);
 Datum

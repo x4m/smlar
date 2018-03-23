@@ -374,7 +374,7 @@ deconstructCompositeType(ProcTypeInfo info, Datum in, double *weight)
 	return values[0];
 }
 
-static int
+int
 cmpArrayElem(const void *a, const void *b, void *arg)
 {
 	ProcTypeInfo	info = (ProcTypeInfo)arg;
