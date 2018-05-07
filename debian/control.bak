@@ -1,0 +1,14 @@
+Source: smlar
+Section: database
+Priority: optional
+Maintainer: Andrey Borodin <x4mmm@yandex-team.ru>
+Build-Depends:
+ debhelper (>= 9),
+ postgresql-server-dev-all (>= 189~),
+Standards-Version: 4.1.1
+Homepage: https://github.com/x4mmm/smlar
+
+Package: postgresql-9.6-smlar
+Architecture: any
+Depends: postgresql-9.6, ${misc:Depends}, ${shlibs:Depends}
+Description: PostgreSQL extension for similarity search. 
