@@ -1,5 +1,6 @@
 #include "smlar.h"
 
+#include <math.h>
 #include "fmgr.h"
 #include "catalog/pg_type.h"
 #include "executor/spi.h"

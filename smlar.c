@@ -1,6 +1,8 @@
 #include "smlar.h"
 
 #include "fmgr.h"
+#include <math.h>
+#include <float.h>
 #include "access/genam.h"
 #include "access/heapam.h"
 #include "access/htup_details.h"
@@ -16,9 +18,27 @@
 #include "utils/fmgroids.h"
 #include "utils/lsyscache.h"
 #include "utils/memutils.h"
-#include "utils/tqual.h"
 #include "utils/syscache.h"
 #include "utils/typcache.h"
+
+#if (PG_VERSION_NUM >= 120000)
+/*
+ * It's not supported to create tuples with oids anymore, but when pg_upgrade
+ * was used to upgrade from an older version, tuples might still have an
+ * oid. Seems worthwhile to display that.
+ */
+#define HeapTupleHeaderGetOid(tup) \
+( \
+	((tup)->t_infomask & HEAP_HASOID_OLD) ? \
+		*((Oid *) ((char *)(tup) + (tup)->t_hoff - sizeof(Oid))) \
+	: \
+		InvalidOid \
+)
+#define HeapTupleGetOid(tuple) \
+		HeapTupleHeaderGetOid((tuple)->t_data)
+#else
+#include "utils/tqual.h"
+#endif
 
 PG_MODULE_MAGIC;
 
