@@ -4,8 +4,13 @@
 #include "fmgr.h"
 #include "access/gist.h"
 #include "access/skey.h"
-#include "access/tuptoaster.h"
 #include "utils/memutils.h"
+
+#if PG_VERSION_NUM >= 130000
+#include "access/heaptoast.h"
+#else
+#include "access/tuptoaster.h"
+#endif
 
 typedef struct SmlSign {
 	int32	vl_len_; /* varlena header (do not touch directly!) */

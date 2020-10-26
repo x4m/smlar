@@ -21,6 +21,12 @@
 #include "utils/syscache.h"
 #include "utils/typcache.h"
 
+#if PG_VERSION_NUM >= 130000
+#define heap_open(relation, lockmode) table_open(relation, lockmode)
+#define heap_close(relation, lockmode) table_close(relation, lockmode)
+#endif
+
+
 #if (PG_VERSION_NUM >= 120000)
 /*
  * It's not supported to create tuples with oids anymore, but when pg_upgrade
