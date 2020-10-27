@@ -82,7 +82,7 @@ getDefaultOpclass(Oid amoid, Oid typid)
 		{
 			if ( OidIsValid(opclassOid) )
 				elog(ERROR, "Ambiguous opclass for type %u (access method %u)", typid, amoid); 
-			opclassOid = HeapTupleGetOid(tuple);
+			opclassOid = opclass->oid;
 		}
 	}
 
