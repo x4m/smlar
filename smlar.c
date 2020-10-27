@@ -40,8 +40,6 @@
 	: \
 		InvalidOid \
 )
-#define HeapTupleGetOid(tuple) \
-		HeapTupleHeaderGetOid((tuple)->t_data)
 #else
 #include "utils/tqual.h"
 #endif
@@ -82,7 +80,11 @@ getDefaultOpclass(Oid amoid, Oid typid)
 		{
 			if ( OidIsValid(opclassOid) )
 				elog(ERROR, "Ambiguous opclass for type %u (access method %u)", typid, amoid); 
+#if (PG_VERSION_NUM >= 120000)
 			opclassOid = opclass->oid;
+#else
+			opclassOid = HeapTupleGetOid(tuple);
+#endif
 		}
 	}
 
