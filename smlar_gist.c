@@ -18,6 +18,16 @@ typedef struct SmlSign {
 	char	data[1];
 } SmlSign;
 
+#if PG_VERSION_NUM >= 160000
+
+/*
+ * Abs
+ *		Return the absolute value of the argument.
+ */
+#define Abs(x)			((x) >= 0 ? (x) : -(x))
+
+#endif
+
 #define SMLSIGNHDRSZ	(offsetof(SmlSign, data))
 
 #define BITBYTE 8
@@ -236,6 +246,7 @@ getHashedCache(void *cache)
 	if ( stat->nhelems < 0 )
 	{
 		int i;
+		int index;
 		/*
 		 * Init
 		 */
@@ -250,7 +261,7 @@ getHashedCache(void *cache)
 			hash = DatumGetUInt32(FunctionCall1Coll(&stat->info->hashFunc,
 													DEFAULT_COLLATION_OID,
 													stat->elems[i].datum));
-			int		index = HASHVAL(hash);
+			index = HASHVAL(hash);
 
 			stat->helems[i].hash = hash;
 			stat->helems[i].idfMin = stat->helems[i].idfMax = stat->elems[i].idf;	
