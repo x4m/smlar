@@ -113,8 +113,8 @@ getAMProc(Oid amoid, Oid typid)
 
 		for (i = 0; i < catlist->n_members; i++)
 		{
-			HeapTuple		tuple = &catlist->members[i]->tuple;
-			Form_pg_cast	castForm = (Form_pg_cast)GETSTRUCT(tuple);
+			HeapTuple		cattuple = &catlist->members[i]->tuple;
+			Form_pg_cast	castForm = (Form_pg_cast)GETSTRUCT(cattuple);
 
 			if ( castForm->castfunc == InvalidOid && castForm->castcontext == COERCION_CODE_IMPLICIT )
 			{
