@@ -5,6 +5,9 @@
 #include "access/heapam.h"
 #include "access/htup_details.h"
 #include "access/nbtree.h"
+#if PG_VERSION_NUM >= 180000
+#include "access/tupdesc.h"
+#endif
 #include "catalog/indexing.h"
 #include "catalog/pg_am.h"
 #include "catalog/pg_amproc.h"
@@ -187,8 +190,10 @@ getAMProc(Oid amoid, Oid typid)
 static ProcTypeInfo *cacheProcs = NULL;
 static int nCacheProcs = 0;
 
+#if PG_VERSION_NUM < 180000
 #ifndef TupleDescAttr
 #define TupleDescAttr(tupdesc, i)	((tupdesc)->attrs[(i)])
+#endif
 #endif
 
 static ProcTypeInfo
